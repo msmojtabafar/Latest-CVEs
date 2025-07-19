@@ -1,0 +1,83 @@
+linux
+windows
+kernel
+macOS
+android
+Chrome
+Firefox
+Microsoft Edge 
+Safari
+WinRAR
+7-Zip
+Microsoft Office
+Adobe Acrobat
+git
+azure
+VLC
+Windows Media Player
+router
+switch
+firewall
+vpn
+network
+dns
+tcp
+udp
+Splunk
+IBM
+QRadar
+SolarWinds
+PRTG
+Zabbix
+Active Directory
+Okta
+aws
+azure
+gcp
+kubernetes
+vmware
+docker
+Hyper-V
+Apache
+Nginx
+IIS
+Tomcat
+JBoss
+WebLogic
+mysql
+postgresql
+sql
+nosql
+database
+mongodb
+Cisco
+Fortinet
+Palo Alto
+D-link
+TP-link
+NVIDIA
+SSL
+TLS
+SSH
+FTP
+iot
+firmware
+modem
+bluetooth
+smart device
+wordpress
+joomla
+WooCommerce
+java
+visual studio
+visual studio code
+jetbrain
+php
+Ruby
+python
+plugin
+google
+CSS
+Ansible
+TOTOLINK
+Tenda

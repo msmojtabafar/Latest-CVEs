@@ -1,0 +1,5 @@
+APScheduler
+flask
+flask-cors
+flask-sqlalchemy
+requests
