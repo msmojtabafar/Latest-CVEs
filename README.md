@@ -1,10 +1,9 @@
 CVE Fetcher Tool
 Welcome to the CVE Fetcher Tool! 🚀
 
-This powerful tool automatically fetches the latest CVEs (Common Vulnerabilities and Exposures) from the National Vulnerability Database (NVD) every 3 hours and stores them securely in a database. No more worrying about missing critical vulnerabilities!
+This powerful tool automatically fetches the latest CVEs (Common Vulnerabilities and Exposures) from the National Vulnerability Database (NVD) and stores them securely in a database. No more worrying about missing critical vulnerabilities!
 
 Key Features:
-Automated Updates: The tool checks for new CVEs every 3 hours, ensuring your database is always up-to-date.
 
 HTML Dashboard: A clean and user-friendly HTML page powered by Flask to display all the saved CVEs.
 
