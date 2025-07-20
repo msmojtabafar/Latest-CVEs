@@ -1,334 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Latest CVEs</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <meta charset="UTF-8">
+  <title>List of CVEs</title>
+  <link rel="stylesheet" href="/static/style.css">
   <style>
-    body {
-      font-family: sans-serif;
-      margin: 20px;
-    }
-
-    .container {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-    }
-
-    .table-section {
-      flex: 3;
-    }
-
-    .filter-container {
-      flex: 1;
-    }
-
-    .filter-toggle {
-      margin-bottom: 10px;
-      cursor: pointer;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      font-size: 14px;
-      border-radius: 5px;
-    }
-
-    .filter-section {
-      border: 1px solid #ccc;
-      padding: 15px;
-      background: #f4f4f4;
-      border-radius: 8px;
-      overflow: hidden;
-      max-height: 0;
-      opacity: 0;
-      transition: all 0.4s ease;
-    }
-
-    .filter-section.open {
-      max-height: 700px;
-      opacity: 1;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
+      margin-top: 20px;
     }
 
     th, td {
-      padding: 6px 10px;
+      padding: 8px 12px;
       border: 1px solid #ccc;
-      text-align: left;
-      font-size: 14px;
     }
 
-    .sortable {
-      cursor: pointer;
-      border: none;
-      background: none;
-      font-weight: bold;
+    th {
+      background-color: #f4f4f4;
     }
 
-    .badge {
-      background: #222;
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 10px;
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
     }
 
-    .toggle-btn {
-      background: none;
+    body {
+      font-family: sans-serif;
+      margin: 40px;
+    }
+
+    a {
+      text-decoration: none;
       color: blue;
-      border: none;
       cursor: pointer;
-      text-decoration: underline;
-      font-size: 0.9em;
-      margin-left: 5px;
+    }
+
+    input, select {
+      margin: 5px;
+      padding: 5px;
     }
   </style>
 </head>
 <body>
 
-  <h1>Latest CVEs</h1>
+<h1>Dashboard CVEs</h1>
+<button id="fetch-btn">Fetch New CVEs</button>
+<p id="fetch-status" style="color: green;"></p>
 
-  <button id="fetchBtn">Fetch New CVEs from NVD</button>
-  <p id="fetchStatus" style="color: green;"></p>
+<hr>
 
-  <!-- جستجو -->
-  <form id="searchForm">
-    <input type="text" id="cveSearch" placeholder="Enter CVE ID (e.g., CVE-2024-12345)" required />
-    <button type="submit">Search</button>
-  </form>
+<!-- فیلتر جستجو -->
+<div style="margin-top: 20px;">
+  <input type="text" id="search-input" placeholder="Search by CVE ID, keyword or description..." />
 
-  <div id="searchResult"></div>
-  <div id="cve-count-box">
-    <span class="badge">Total CVEs: <span id="cve-count">0</span></span>
-  </div>
+  <input type="number" id="score-from" placeholder="CVSS from" min="0" max="10" step="0.1" />
+  <input type="number" id="score-to" placeholder="CVSS to" min="0" max="10" step="0.1" />
 
-  <div class="container">
-    <!-- جدول -->
-    <div class="table-section">
-      <table>
-        <thead>
-        <tr>
-          <th>#</th>
-          <th>CVE ID</th>
-          <th>Severity</th>
-          <th><button class="sortable" data-sort="score">Score ▲</button></th>
-          <th><button class="sortable" data-sort="date">Date ▲</button></th>
-          <th>Description</th>
-          <th>Keywords</th>
-        </tr>
-        </thead>
-        <tbody id="cve-table-body"></tbody>
-      </table>
-    </div>
+  <input type="date" id="date-from" />
+  <input type="date" id="date-to" />
 
-    <!-- فیلتر -->
-    <div class="filter-container">
-      <button id="toggleFilter" class="filter-toggle">Filters</button>
-      <div id="filterPanel" class="filter-section">
-        <h2>Advanced Filter</h2>
-        <!-- فقط بخش form زیر را پیدا کن و این فیلد را به آن اضافه کن -->
-  <form id="advancedFilterForm">
-    <label>Severity:</label>
-    <select id="advSeverity">
-      <option value="">All</option>
-      <option value="CRITICAL">Critical</option>
-      <option value="HIGH">High</option>
-      <option value="MEDIUM">Medium</option>
-      <option value="LOW">Low</option>
-    </select>
+  <select id="severity-filter">
+    <option value="">All Severities</option>
+    <option value="LOW">LOW</option>
+    <option value="MEDIUM">MEDIUM</option>
+    <option value="HIGH">HIGH</option>
+    <option value="CRITICAL">CRITICAL</option>
+  </select>
+</div>
 
-    <br><br>
-    <label>Score:</label><br>
-    <input type="number" id="minScore" placeholder="Min" step="0.1" min="0" max="10" />
-    <input type="number" id="maxScore" placeholder="Max" step="0.1" min="0" max="10" />
+<h2 style="margin-top: 20px; color: #333;">Total CVEs: <span style="color: #007bff;">{{ total }}</span></h2>
 
-    <br><br>
-    <label>Date Range:</label><br>
-    <input type="date" id="dateFrom" />
-    <input type="date" id="dateTo" />
+<table>
+<thead>
+    <tr>
+        <th>#</th>
+        <th>CVE ID</th>
+        <th>Severity</th>
+        <th>CVSS Score</th>
+        <th>Published Date</th>
+        <th>Description</th>
+        <th>Keywords</th>
+    </tr>
+</thead>
+<tbody>
+    {% for cve in cves %}
+    <tr>
+        <td>{{ loop.index }}</td>
+        <td class="cve-id">{{ cve.cve_id }}</td>
+        <td class="cve-severity">{{ cve.severity }}</td>
+        <td class="cve-score">{{ cve.cvss_score }}</td>
+        <td class="cve-date">{{ cve.published_date.strftime('%Y-%m-%d') }}</td>
+        <td class="cve-desc">
+            {% if cve.description|length > 100 %}
+                <span class="short-desc">{{ cve.description[:100] }}...</span>
+                <span class="full-desc" style="display: none;">{{ cve.description }}</span>
+                <a href="#" class="toggle-desc" onclick="toggleDescription(this); return false;">Show more</a>
+            {% else %}
+                {{ cve.description }}
+            {% endif %}
+        </td>
+        <td class="cve-keyword">{{ cve.keywords }}</td>
+    </tr>
+    {% endfor %}
+</tbody>
 
-    <br><br>
-    <label>Keyword Search:</label><br>
-    <input type="text" id="keywordSearch" placeholder="e.g. overflow, rce" />
+</table>
 
-    <br><br>
-    <button type="submit">Apply</button>
-    <button type="button" onclick="resetFilters()">Reset</button>
-  </form>
-      </div>
-    </div>
-  </div>
+<script>
+document.getElementById('fetch-btn').addEventListener('click', function () {
+  const status = document.getElementById('fetch-status');
+  status.textContent = 'Fetching...';
 
-  <script>
-    let allData = [];
-    let sortState = { score: 'asc', date: 'asc' };
-
-    function toggleDesc(index) {
-      const short = document.getElementById(`short-${index}`);
-      const full = document.getElementById(`full-${index}`);
-      const btn = full.parentElement.querySelector('.toggle-btn');
-
-      if (full.style.display === "none") {
-        full.style.display = "inline";
-        short.style.display = "none";
-        btn.textContent = "Show less";
-      } else {
-        full.style.display = "none";
-        short.style.display = "inline";
-        btn.textContent = "Show more";
-      }
-    }
-
-    function renderTable(data) {
-      const tbody = document.getElementById('cve-table-body');
-      tbody.innerHTML = "";
-      data.forEach((cve, index) => {
-        const desc = cve.desc || "No description available";
-        const isLong = desc.length > 100;
-        const shortDesc = isLong ? desc.slice(0, 100) + "..." : desc;
-
-        const row = `
-          <tr>
-            <td>${index + 1}</td>
-            <td><a href="https://nvd.nist.gov/vuln/detail/${cve.id}" target="_blank">${cve.id}</a></td>
-            <td>${cve.severity}</td>
-            <td>${cve.score}</td>
-            <td>${cve.date.substring(0, 10)}</td>
-            <td>
-              <span id="short-${index}">${shortDesc}</span>
-              <span id="full-${index}" style="display:none;">${desc}</span>
-              ${isLong ? `<button onclick="toggleDesc(${index})" class="toggle-btn">Show more</button>` : ''}
-            </td>
-            <td>${cve.keywords || '-'}</td>
-          </tr>`;
-        tbody.innerHTML += row;
-      });
-
-      document.getElementById('cve-count').textContent = data.length;
-    }
-
-    function loadCves(filter = {}) {
-  fetch('/api/cves')
+  fetch('/fetch', { method: 'POST' })
     .then(res => res.json())
     .then(data => {
-      allData = data;
-
-      if (filter.severity) allData = allData.filter(c => c.severity === filter.severity);
-      if (filter.minScore) allData = allData.filter(c => parseFloat(c.score) >= parseFloat(filter.minScore));
-      if (filter.maxScore) allData = allData.filter(c => parseFloat(c.score) <= parseFloat(filter.maxScore));
-      if (filter.dateFrom) allData = allData.filter(c => new Date(c.date) >= new Date(filter.dateFrom));
-      if (filter.dateTo) allData = allData.filter(c => new Date(c.date) <= new Date(filter.dateTo));
-
-      if (filter.keywords && filter.keywords.length > 0) {
-        const keywordList = filter.keywords.map(k => k.trim().toLowerCase());
-        allData = allData.filter(c => {
-          if (!c.keywords) return false;
-          const cveKeywords = c.keywords.toLowerCase();
-          return keywordList.some(k => cveKeywords.includes(k));
-        });
+      if (data.message) {
+        status.textContent = 'Fetch successful!';
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        status.textContent = 'Fetch failed!';
       }
-
-      renderTable(allData);
+    })
+    .catch(err => {
+      status.textContent = 'Error while fetching.';
+      console.error(err);
     });
-}
-
-    document.querySelectorAll('.sortable').forEach(button => {
-      button.addEventListener('click', () => {
-        const key = button.dataset.sort;
-        const order = sortState[key] === 'asc' ? 'desc' : 'asc';
-        sortState[key] = order;
-
-        document.querySelectorAll('.sortable').forEach(btn => {
-          btn.textContent = btn.dataset.sort.charAt(0).toUpperCase() + btn.dataset.sort.slice(1) + ' ▲';
-        });
-        button.textContent = key.charAt(0).toUpperCase() + key.slice(1) + (order === 'asc' ? ' ▲' : ' ▼');
-
-        allData.sort((a, b) => {
-          if (key === 'date') {
-            return order === 'asc'
-              ? new Date(a.date) - new Date(b.date)
-              : new Date(b.date) - new Date(a.date);
-          } else {
-            return order === 'asc'
-              ? parseFloat(a[key]) - parseFloat(b[key])
-              : parseFloat(b[key]) - parseFloat(a[key]);
-          }
-        });
-
-        renderTable(allData);
-      });
-    });
-
-document.getElementById("advancedFilterForm").addEventListener("submit", function (e) {
-  e.preventDefault();
-  const keywordText = document.getElementById("keywordSearch").value;
-  const filter = {
-    severity: document.getElementById("advSeverity").value,
-    minScore: document.getElementById("minScore").value,
-    maxScore: document.getElementById("maxScore").value,
-    dateFrom: document.getElementById("dateFrom").value,
-    dateTo: document.getElementById("dateTo").value,
-    keywords: keywordText ? keywordText.split(',') : []
-  };
-  loadCves(filter);
 });
 
-    function resetFilters() {
-      document.getElementById("advancedFilterForm").reset();
-      loadCves();
+document.querySelectorAll('.toggle-desc').forEach(link => {
+  link.addEventListener('click', function () {
+    const cveId = this.getAttribute('data-cve');
+    const td = this.parentElement;
+    const shortDesc = td.querySelector('.short-desc');
+
+    let fullDesc = td.querySelector('.full-desc');
+
+    if (fullDesc) {
+      const isVisible = fullDesc.style.display !== 'none';
+      fullDesc.style.display = isVisible ? 'none' : 'inline';
+      shortDesc.style.display = isVisible ? 'inline' : 'none';
+      this.textContent = isVisible ? 'Show more' : 'Show less';
+      return;
     }
 
-    document.getElementById("searchForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-      const cveId = document.getElementById("cveSearch").value;
-      fetch(`/api/cve_search?cve_id=${cveId}`)
-        .then(res => res.json())
-        .then(data => {
-          const resultDiv = document.getElementById('searchResult');
-          if (data.error) {
-            resultDiv.innerHTML = `<p style="color:red;">${data.error}</p>`;
-          } else {
-            resultDiv.innerHTML = `
-              <p><strong>CVE ID:</strong> ${data.id}</p>
-              <p><strong>Description:</strong> ${data.desc}</p>
-              <p><strong>Severity:</strong> ${data.severity}</p>
-              <p><strong>Score:</strong> ${data.score}</p>
-              <p><strong>Date:</strong> ${data.date}</p>
-              <p><a href="https://nvd.nist.gov/vuln/detail/${data.id}" target="_blank">View on NVD</a></p>
-            `;
-          }
-        });
-    });
+    fetch(`/get_description/${cveId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.description) {
+          fullDesc = document.createElement('span');
+          fullDesc.className = 'full-desc';
+          fullDesc.style.display = 'inline';
+          fullDesc.textContent = data.description;
 
-    document.getElementById("fetchBtn").addEventListener("click", () => {
-      document.getElementById("fetchStatus").textContent = "Fetching...";
-      fetch('/api/fetch_cves')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            document.getElementById("fetchStatus").textContent = "Fetch completed.";
-            loadCves();
-          } else {
-            document.getElementById("fetchStatus").textContent = "Error fetching CVEs.";
-          }
-        })
-        .catch(err => {
-          document.getElementById("fetchStatus").textContent = "Request failed.";
-          console.error(err);
-        });
-    });
+          shortDesc.style.display = 'none';
+          td.insertBefore(fullDesc, this);
+          this.textContent = 'Show less';
+        } else {
+          alert("Failed to load description");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error loading description");
+      });
+  });
+});
 
-    document.getElementById("toggleFilter").addEventListener("click", () => {
-      const panel = document.getElementById("filterPanel");
-      panel.classList.toggle("open");
-    });
+// Live filter
+const inputs = ['search-input', 'score-from', 'score-to', 'date-from', 'date-to', 'severity-filter'];
+inputs.forEach(id => {
+  document.getElementById(id).addEventListener('input', filterRows);
+});
 
-    loadCves();
-  </script>
+function filterRows() {
+  const query = document.getElementById('search-input').value.toLowerCase();
+  const scoreFrom = parseFloat(document.getElementById('score-from').value) || 0;
+  const scoreTo = parseFloat(document.getElementById('score-to').value) || 10;
+  const dateFrom = new Date(document.getElementById('date-from').value || '1900-01-01');
+  const dateTo = new Date(document.getElementById('date-to').value || '2100-01-01');
+  const severity = document.getElementById('severity-filter').value;
+
+  document.querySelectorAll('table tbody tr').forEach(row => {
+    const cveId = row.querySelector('.cve-id').textContent.toLowerCase();
+    const desc = row.querySelector('.cve-desc').textContent.toLowerCase();
+    const keyword = row.querySelector('.cve-keyword').textContent.toLowerCase();
+    const score = parseFloat(row.querySelector('.cve-score').textContent) || 0;
+    const severityVal = row.querySelector('.cve-severity').textContent;
+    const dateStr = row.querySelector('.cve-date').textContent;
+    const pubDate = new Date(dateStr);
+
+    const matchText = cveId.includes(query) || desc.includes(query) || keyword.includes(query);
+    const matchScore = score >= scoreFrom && score <= scoreTo;
+    const matchDate = pubDate >= dateFrom && pubDate <= dateTo;
+    const matchSeverity = severity === '' || severityVal === severity;
+
+    row.style.display = (matchText && matchScore && matchDate && matchSeverity) ? '' : 'none';
+  });
+}
+</script>
+
 </body>
 </html>

@@ -1,87 +1,61 @@
-from flask import Flask, request, jsonify, render_template
-from models import db, CVE
-from cve_fetcher import fetch_cves 
-import os
-from apscheduler.schedulers.background import BackgroundScheduler
-from cve_fetcher import fetch_cves
-
+from flask import Flask, render_template, jsonify
+from config import *
+from model import db, CVE
+from fetcher import fetch_cves
 
 app = Flask(__name__)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:toor@localhost/cvedb'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+app.config.from_pyfile("config.py")
 db.init_app(app)
 
 def load_keywords():
-    keyword_path = os.path.join(os.path.dirname(__file__), 'keywords.txt')
-    if not os.path.exists(keyword_path):
+    try:
+        with open('keywords.txt', 'r', encoding='utf-8') as f:
+            return [line.strip().lower() for line in f if line.strip()]
+    except FileNotFoundError:
         return []
-    with open(keyword_path, 'r', encoding='utf-8') as f:
-        return [line.strip() for line in f if line.strip()]
 
-def extract_keywords(description, keyword_list):
-    found = []
-    desc_lower = (description or "").lower()
-    for keyword in keyword_list:
-        if keyword.lower() in desc_lower:
-            found.append(keyword)
-    return found
+@app.route("/")
 
-@app.route('/')
-def index():
-    return render_template("index.html")
-
-@app.route('/api/cves')
-def get_cves():
+def show_cves():
     cves = CVE.query.order_by(CVE.published_date.desc()).all()
-    keyword_list = load_keywords()
+    keywords = load_keywords()
+    
+    matched_cves = []
+    for cve in cves:
+        description = cve.description.lower() if cve.description else ""
+        matched = [kw for kw in keywords if kw in description]
 
-    return jsonify([
-        {
-            'id': c.cve_id,
-            'desc': c.description,
-            'severity': c.severity,
-            'score': c.cvss_score,
-            'date': c.published_date.isoformat(),
-            'keywords': ', '.join(extract_keywords(c.description, keyword_list))
-        }
-        for c in cves
-    ])
+        matched_cves.append({
+            'cve_id': cve.cve_id,
+            'severity': cve.severity,
+            'cvss_score': cve.cvss_score,
+            'published_date': cve.published_date,
+            'description': cve.description,
+            'keywords': ', '.join(matched) if matched else '---'
+        })
 
-@app.route('/api/cve_search')
-def search_cve():
-    cve_id = request.args.get('cve_id')
-    cve = CVE.query.filter_by(cve_id=cve_id).first()
-    if not cve:
-        return jsonify({"error": "CVE not found"}), 404
+    return render_template('index.html', cves=matched_cves, total=len(cves))
 
-    keyword_list = load_keywords()
-    keywords = extract_keywords(cve.description, keyword_list)
 
-    return jsonify({
-        'id': cve.cve_id,
-        'desc': cve.description,
-        'severity': cve.severity,
-        'score': cve.cvss_score,
-        'date': cve.published_date.isoformat(),
-        'keywords': ', '.join(keywords)
-    })
-
-@app.route('/api/fetch_cves', methods=['GET'])
-def fetch_cves_api():
+@app.route("/fetch", methods=["POST"])
+def fetch():
     try:
         fetch_cves()
-        return jsonify({"success": True}), 200
+        return jsonify({"message": "Fetched successfully!"})
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        print("Error in /fetch:", e)
+        return jsonify({"error": str(e)}), 500
 
-
-
-scheduler = BackgroundScheduler()
-scheduler.add_job(fetch_cves, 'interval', hours=3)
-scheduler.start()
-
-
-if __name__ == '__main__':
+@app.route('/get_description/<cve_id>')
+def get_description(cve_id):
+    cve = db.session.query(CVE).filter_by(cve_id=cve_id).first()
+    if cve:
+        return jsonify({'description': cve.description})
+    else:
+        return jsonify({'error': 'CVE not found'}), 404
+    
+    
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
