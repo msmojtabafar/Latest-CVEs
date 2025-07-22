@@ -12,3 +12,4 @@ class CVE(db.Model):
     severity = db.Column(db.String(20), nullable=False)
     cvss_score = db.Column(db.Float, nullable=False)
     published_date = db.Column(db.Date, default=datetime.utcnow)
+    lastModified_date = db.Column(db.Date, default=datetime.utcnow)

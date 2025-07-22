@@ -44,12 +44,14 @@
 <body>
 
 <h1>Dashboard CVEs</h1>
+    <form action="/update" method="get">
+        <button type="submit">Show Update Table</button>
+    </form>
 <button id="fetch-btn">Fetch New CVEs</button>
 <p id="fetch-status" style="color: green;"></p>
 
 <hr>
 
-<!-- فیلتر جستجو -->
 <div style="margin-top: 20px;">
   <input type="text" id="search-input" placeholder="Search by CVE ID, keyword or description..." />
 
@@ -78,6 +80,7 @@
         <th>Severity</th>
         <th>CVSS Score</th>
         <th>Published Date</th>
+        <th>Update Date</th>
         <th>Description</th>
         <th>Keywords</th>
     </tr>
@@ -90,6 +93,7 @@
         <td class="cve-severity">{{ cve.severity }}</td>
         <td class="cve-score">{{ cve.cvss_score }}</td>
         <td class="cve-date">{{ cve.published_date.strftime('%Y-%m-%d') }}</td>
+        <td class="cve-update">{{ cve.lastModified_date }}</td>
         <td class="cve-desc">
             {% if cve.description|length > 100 %}
                 <span class="short-desc">{{ cve.description[:100] }}...</span>
@@ -166,7 +170,7 @@ document.querySelectorAll('.toggle-desc').forEach(link => {
   });
 });
 
-// Live filter
+
 const inputs = ['search-input', 'score-from', 'score-to', 'date-from', 'date-to', 'severity-filter'];
 inputs.forEach(id => {
   document.getElementById(id).addEventListener('input', filterRows);

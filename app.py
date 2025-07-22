@@ -2,10 +2,14 @@ from flask import Flask, render_template, jsonify
 from config import *
 from model import db, CVE
 from fetcher import fetch_cves
+from flask import request, redirect, url_for
+from flask import Flask, render_template, jsonify
+from update_cves import run_update_for_recent_days
 
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
 db.init_app(app)
+
 
 def load_keywords():
     try:
@@ -30,6 +34,7 @@ def show_cves():
             'severity': cve.severity,
             'cvss_score': cve.cvss_score,
             'published_date': cve.published_date,
+            'lastModified_date': cve.lastModified_date,
             'description': cve.description,
             'keywords': ', '.join(matched) if matched else '---'
         })
@@ -46,6 +51,7 @@ def fetch():
         print("Error in /fetch:", e)
         return jsonify({"error": str(e)}), 500
 
+
 @app.route('/get_description/<cve_id>')
 def get_description(cve_id):
     cve = db.session.query(CVE).filter_by(cve_id=cve_id).first()
@@ -53,8 +59,25 @@ def get_description(cve_id):
         return jsonify({'description': cve.description})
     else:
         return jsonify({'error': 'CVE not found'}), 404
-    
-    
+
+
+
+
+@app.route("/update-cve-dates", methods=["POST"])
+def update_cve_dates():
+    try:
+        run_update_for_recent_days()
+    except Exception as e:
+        print(f"خطا در بروزرسانی CVEها: {str(e)}")
+    return '', 204  # No Content - صفحه‌ای نمایش داده نمی‌شود
+
+
+@app.route("/update")
+def show_update_table():
+    cves = CVE.query.order_by(CVE.lastModified_date.desc()).all()
+    return render_template("update.html", cves=cves)
+
+
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()

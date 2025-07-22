@@ -24,6 +24,7 @@ def fetch_cves():
             severity = cve_data.get("metrics", {}).get("cvssMetricV31", [{}])[0].get("cvssData", {}).get("baseSeverity", "UNKNOWN")
             score = cve_data.get("metrics", {}).get("cvssMetricV31", [{}])[0].get("cvssData", {}).get("baseScore", 0)
             published = datetime.strptime(cve_data.get("published", "2000-01-01T00:00Z")[:10], "%Y-%m-%d").date()
+            lastModified = datetime.strptime(cve_data.get("lastModified", "2000-01-01T00:00Z")[:10], "%Y-%m-%d").date()
 
             # ذخیره در دیتابیس
             if not CVE.query.filter_by(cve_id=cve_id).first():
@@ -32,7 +33,8 @@ def fetch_cves():
                     description=desc,
                     severity=severity,
                     cvss_score=score,
-                    published_date=published
+                    published_date=published,
+                    lastModified_date = lastModified
                 ))
         db.session.commit()
     except Exception as e:

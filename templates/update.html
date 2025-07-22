@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            direction: rtl;
+            font-family: sans-serif;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #aaa;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        caption {
+            caption-side: top;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .center-button {
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #searchBox {
+            display: block;
+            margin: 0 auto 20px auto;
+            padding: 10px;
+            width: 50%;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="center-button">
+        <button id="updateBtn" type="button" onclick="updateCVE()">Check the update date of CVEs</button>
+        <span id="msg" style="margin-right: 10px;"></span>
+    </div>
+
+    <input type="text" id="searchBox" placeholder="Search CVE..." onkeyup="searchTable()">
+
+    <table id="cveTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th> CVE ID</th>
+                <th>Last updated date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cves %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ item.cve_id }}</td>
+                <td>{{ item.lastModified_date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+<script>
+function updateCVE() {
+    const btn = document.getElementById("updateBtn");
+    const msg = document.getElementById("msg");
+
+    btn.disabled = true;
+    btn.textContent = "⏳ Checking...";
+
+    fetch("/update-cve-dates", { method: "POST" })
+        .then(response => {
+            if (response.ok) {
+                msg.textContent = "✅ Update completed. Refreshing...";
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                msg.textContent = "❌ Error in performing the operation";
+                btn.disabled = false;
+                btn.textContent = "Check the update date of CVEs";
+            }
+        })
+        .catch(error => {
+            msg.textContent = "⚠️ Error communicating with the server.";
+            btn.disabled = false;
+            btn.textContent = "Check Last Update";
+        });
+}
+
+function searchTable() {
+    const input = document.getElementById("searchBox");
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById("cveTable");
+    const trs = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < trs.length; i++) {
+        const cveCell = trs[i].getElementsByTagName("td")[1];
+        if (cveCell) {
+            const cveText = cveCell.textContent || cveCell.innerText;
+            trs[i].style.display = cveText.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+        }
+    }
+}
+</script>
+
+</body>
+</html>
