@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All CVE PoC Links</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #f9f9f9;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            width: 300px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border: 1px solid #aaa;
+            border-radius: 5px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: white;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🛡️ All CVE with PoC Links</h2>
+
+    <input type="text" id="searchInput" placeholder="Search CVE ID or Link..." onkeyup="filterTable()">
+
+    <table id="cveTable">
+
+    <tbody>
+        {% for cve in cves %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ cve.cve_id }}</td>
+            <td>
+                <ul>
+                    {% for link in cve.links %}
+                    <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+
+    <script>
+        function filterTable() {
+            const input = document.getElementById("searchInput");
+            const filter = input.value.toLowerCase();
+            const rows = document.querySelectorAll("#cveTable tbody tr");
+
+            rows.forEach(row => {
+                const cveId = row.children[1].textContent.toLowerCase();
+                const link = row.children[2].textContent.toLowerCase();
+                if (cveId.includes(filter) || link.includes(filter)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

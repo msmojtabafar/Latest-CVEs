@@ -5,6 +5,8 @@ from fetcher import fetch_cves
 from flask import request, redirect, url_for
 from flask import Flask, render_template, jsonify
 from update_cves import run_update_for_recent_days
+from POC import poc_blueprint
+
 
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
@@ -69,13 +71,16 @@ def update_cve_dates():
         run_update_for_recent_days()
     except Exception as e:
         print(f"خطا در بروزرسانی CVEها: {str(e)}")
-    return '', 204  # No Content - صفحه‌ای نمایش داده نمی‌شود
+    return '', 204  # No Content 
 
 
 @app.route("/update")
 def show_update_table():
     cves = CVE.query.order_by(CVE.lastModified_date.desc()).all()
     return render_template("update.html", cves=cves)
+
+
+app.register_blueprint(poc_blueprint, url_prefix='/poc')
 
 
 if __name__ == "__main__":
