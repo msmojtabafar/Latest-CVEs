@@ -11,7 +11,7 @@ def fetch_cves():
             "startIndex": 0,
             "resultsPerPage": 10,
         }
-
+        site = "NVD"
         response = requests.get(url, params=params)
         if response.status_code != 200:
             raise Exception("Failed to fetch from NVD API")
@@ -34,7 +34,8 @@ def fetch_cves():
                     severity=severity,
                     cvss_score=score,
                     published_date=published,
-                    lastModified_date = lastModified
+                    lastModified_date = lastModified,
+                    site = site
                 ))
         db.session.commit()
     except Exception as e:

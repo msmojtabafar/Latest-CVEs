@@ -1,30 +1,31 @@
 CVE Fetcher Tool
 Welcome to the CVE Fetcher Tool! 🚀
 
-This powerful tool automatically fetches the latest CVEs (Common Vulnerabilities and Exposures) from the National Vulnerability Database (NVD) and stores them securely in a database. No more worrying about missing critical vulnerabilities!
+This powerful tool automatically fetches the latest CVEs (Common Vulnerabilities and Exposures) from both the National Vulnerability Database (NVD) and Vulmon, and securely stores them in a database. No more worrying about missing critical vulnerabilities from your favorite sources!
 
 🔑 Key Features:
-Automatic Updates: The tool checks for new CVEs regularly, ensuring your database is always up-to-date.
+* Multi-Source Collection: Retrieves CVE data from both NVD (cve.org) and Vulmon to ensure comprehensive coverage of the latest vulnerabilities.
 
-HTML Dashboard: A clean and user-friendly HTML page powered by Flask to display all the saved CVEs.
+* Automatic Updates: The tool regularly checks for new CVEs from both sources, keeping your database consistently up-to-date.
 
-Search & Filter: Easily search for specific vulnerabilities and apply filters to narrow down your results.
+* HTML Dashboard: A clean and user-friendly HTML interface powered by Flask displays all collected CVEs in one place.
 
-Manual Fetching: Need fresh data right away? Just click the Fetch button to manually retrieve the latest CVEs at any time.
+* Search & Filter: Quickly search and filter vulnerabilities by keyword, severity, or publication date.
 
-PoC Detection: The tool fetches proof-of-concept (PoC) links for CVEs that were updated in the past 24 hours, and stores them in a separate table.
+* Manual Fetching: Want instant updates? Just click the Fetch button to manually retrieve the most recent CVEs from both platforms.
 
-PoC Dashboard: A dedicated HTML page displays CVEs with available PoC links in a grouped and organized format — perfect for quickly identifying exploitable vulnerabilities.
+* PoC Detection: Scans for Proof-of-Concept (PoC) links for recently updated CVEs and stores them in a separate table for quick access.
+
+* PoC Dashboard: A dedicated page displays PoC-enabled CVEs in a categorized and organized layout — ideal for quickly spotting exploitable vulnerabilities.
 
 🚀 How to Use:
-Install dependencies: Follow the installation guide to set up the environment.
+* Install dependencies: Follow the installation guide to set up the Python and Flask environment.
 
-Run the tool: Start the Flask server to access the dashboard and explore the CVEs.
+* Run the tool: Start the Flask server and open the dashboard in your browser.
 
-Fetch manually: Click on the "Fetch" button to update the data whenever you need.
+* Fetch manually: Use the Fetch button to update your CVE database with fresh entries from NVD and Vulmon.
 
-View PoCs: Navigate to the PoC dashboard to view CVEs with PoC links discovered in the last 24 hours.
+* Explore PoCs: Navigate to the PoC dashboard to see which CVEs have working proof-of-concept exploits available in the last 24 hours.
 
-This tool is perfect for security researchers, SOC teams, and vulnerability analysts who want to stay on top of the latest security threats in real-time.
-
+This tool is ideal for security researchers, SOC analysts, and vulnerability management teams who want a real-time, comprehensive, and centralized view of the latest cybersecurity threats from trusted databases.
 

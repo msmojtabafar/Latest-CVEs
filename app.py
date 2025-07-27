@@ -3,10 +3,9 @@ from config import *
 from model import db, CVE
 from fetcher import fetch_cves
 from flask import request, redirect, url_for
-from flask import Flask, render_template, jsonify
 from update_cves import run_update_for_recent_days
 from POC import poc_blueprint
-
+from fetcher_from_vulmon import CVEFetcher 
 
 app = Flask(__name__)
 app.config.from_pyfile("config.py")
@@ -38,7 +37,9 @@ def show_cves():
             'published_date': cve.published_date,
             'lastModified_date': cve.lastModified_date,
             'description': cve.description,
-            'keywords': ', '.join(matched) if matched else '---'
+            'keywords': ', '.join(matched) if matched else '---',
+            'site': cve.site
+
         })
 
     return render_template('index.html', cves=matched_cves, total=len(cves))
@@ -81,6 +82,21 @@ def show_update_table():
 
 
 app.register_blueprint(poc_blueprint, url_prefix='/poc')
+
+
+
+@app.route("/fetch-from-vulmon")
+def fetch_vulmon():
+
+    try:
+        fetcher = CVEFetcher(pages=11)
+        data = fetcher.fetch_cve_data()
+        fetcher.close_db()
+        return jsonify({"message": "Fetched successfully!"})
+    except Exception as e:
+        print("Error in /fetch from vulmon:", e)
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == "__main__":
